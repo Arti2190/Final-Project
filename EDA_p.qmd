@@ -1,0 +1,249 @@
+---
+title: "EDA"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+## Introduction Section
+
+### Data Description
+
+The data set is for Diabetes Health Indicators, which contains health-related indicators collected from individuals. Our main goal is to predict the response variable Diabetes_binary, which indicated the presence(1) or absence(0) of diabetes. There are total 23 variables. Most variables are categorical, and some are encoded as integers or binary indicators. These variables will be converted into factors with meaningful level names.
+
+This is a classification problem because we have to find whether the patient has diabetes or not.
+
+## Goal:-
+
+Main goal is to predict whether a person has diabetes based on health indicators.
+
+### Reading Data
+
+Import the libraries
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(tidymodels)
+library(rpart.plot)
+```
+
+```{r}
+health_data <- read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
+head(health_data)
+
+```
+
+### Data preparation
+
+## EDA
+
+-   Understand the distribution and relationship between variables
+
+-   Identify factors that influence diabetes status
+
+-   Prepare the dataset for modeling by identifying necessary transformations or imputations
+
+Checking the Data
+
+```{r}
+health_data |>
+  is.na() |>
+  colSums()
+```
+
+No missing values. Check the column type and values
+
+```{r}
+attributes(health_data)$spec
+```
+
+All columns seems reasonable.
+
+briefly summarize each column to see if there is any weird values
+
+```{r}
+summary(health_data)
+
+```
+
+In the health data it looks like except BMI all the columns are categorical data so we have to convert all the columns into factor
+
+```{r}
+health_data <- health_data |>
+  mutate(HighBP = factor(HighBP, levels = c(0,1), labels = c("No", "Yes")),
+         HighChol = factor(HighChol, levels = c(0,1), labels = c("No", "Yes")),
+         CholCheck = factor(CholCheck, levels = c(0,1), labels = c("No", "Yes")),
+         Smoker = factor(Smoker, levels = c(0,1), labels = c("No", "Yes")),
+         Stroke = factor(Stroke, levels = c(0,1), labels = c("No", "Yes")),
+         HeartDiseaseorAttack = factor(HeartDiseaseorAttack, levels = c(0,1), labels = c("No","Yes")),
+         PhysActivity = factor(PhysActivity, levels = c(0,1), labels = c("No", "Yes")),
+         Fruits = factor(Fruits, levels = c(0,1), labels = c("No", "Yes")),
+         Veggies = factor(Veggies, levels = c(0,1), labels = c("No", "Yes")),
+         HvyAlcoholConsump = factor(HvyAlcoholConsump, levels = c(0, 1), labels = c("No", "Yes")),
+         AnyHealthcare = factor(AnyHealthcare, levels = c(0,1), labels = c("No", "Yes")),
+         NoDocbcCost = factor(NoDocbcCost, levels = c(0,1), labels = c("No", "Yes")),
+         GenHlth = factor(GenHlth, levels = c(1:5), labels = c("Excellent", "Very Good", "Good", "Fair", "Poor")),
+         DiffWalk = factor(DiffWalk, levels = c(0,1), labels = c("No", "Yes")),
+         Sex = factor(Sex, levels = c(0,1), labels = c("Female", "Male")),
+         Age = factor(Age, levels = c(1:13), labels = c("18-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+")),
+         Education = factor(Education, levels = c(1:6), labels = c("KG or No School", "Elementary", "Middle school", "High school", "College","Professional Degree")),
+         Income = factor(Income, levels = c(1:8), labels = c("<10K", "$10k-$15k", "$15k-$20k", "$20k-$25k", "$25k-$35k", "$35k-$50k", "$50k-$75k", "$75k+"))
+         )
+
+health_data
+```
+
+-   Verify the unique values for each column for the factor column only
+
+```{r}
+# Check unique values for categorical variables
+#sapply(health_data, function(x) if (is.factor(x)) levels(x) else NULL)
+factor_col <- health_data |>
+  select(where(is.factor))
+
+lapply(factor_col, levels)
+
+```
+
+-   Find the numerical summary by using contingency table
+
+```{r}
+# freq_table <- sapply(health_data, function(x) if(is.factor(x)) table(x) else NULL)
+# freq_table 
+
+factor_cont_table <- lapply(factor_col, table)
+factor_cont_table
+```
+
+-   Check the number of response variable
+
+```{r}
+unique(health_data$Diabetes_binary)
+```
+
+```{r}
+ggplot(health_data, aes(x= Diabetes_binary, fill = Sex)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Diabetes status by Sex")
+```
+
+```{r}
+cont_table <- table(health_data$Diabetes_binary, health_data$Sex)
+
+cont_table
+```
+
+```{r}
+diab_count <- health_data |>
+  group_by(Diabetes_binary) |>
+  summarize(count = n())
+
+diab_count
+```
+
+-   We can see that the response data is not balanced. Here is number of patient who have diabetes are less incomparison of number of patient who have diabetes.
+
+-   Find the diabetes Prevalence by Gender
+
+```{r}
+ggplot(health_data, aes(x = Diabetes_binary, fill = Sex)) +
+  geom_bar(position = "dodge") +
+  geom_text(
+    stat = "count", 
+    aes(label = ..count..), 
+    position = position_dodge(width = 0.9), 
+    vjust = -0.5
+  ) +
+  labs(
+    title = "Diabetes Status by Gender",
+    x = "Diabetes Status (0 = No Diabetes, 1 = Diabetes)",
+    y = "Count"
+  ) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+```
+
+-   It is showing that number of females have more diabetes in comparison of male count
+
+-   Just checking is there any outlier in BMI column
+
+```{r}
+
+ggplot(health_data, aes(x = "", y = BMI)) +
+  geom_boxplot(fill = "orange") +
+  labs(title = "BMI Distribution", x = "", y= "BMI")
+
+```
+
+-   It looks like there are some outlier in the BMI
+
+### General Health vs. Diabetes Status
+
+```{r}
+
+ggplot(health_data, aes(x = GenHlth, fill = factor(Diabetes_binary))) +
+  geom_bar(position = "dodge") +
+  labs(title = "General Health vs. Diabetes Status", x = "General Health", y = "Count") +
+  scale_fill_manual(values = c("0" = "lightgreen", "1" = "red"), name = "Diabetes Status") +
+  theme_minimal()
+
+```
+
+-   Looks like according to General Health less people have diabetes.
+
+```{r}
+# Summarize the counts for Diabetes_binary by Sex
+diab_count <- health_data %>%
+  group_by(Sex) %>%
+  summarize(count = n())
+
+# Plot using the aggregated data
+ggplot(diab_count, aes(x = Sex, y = count, fill = Sex)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Count of Diabetes Cases by Sex",
+    x = "Sex",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+```
+
+-   Some quick summary stats, We are going to focus on modeling the Diabetes_binary
+
+```{r}
+# do some correlation on the numerical data 
+health_data |>
+  select(where(is.numeric)) |>
+  cor() |>
+  round(3)
+
+```
+
+```{r}
+
+```
