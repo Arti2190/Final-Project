@@ -244,6 +244,9 @@ health_data |>
 
 ```
 
-```{r}
+## Link to navigate to the Modeling.qmd 
 
+\[click here for the Modeling Page\] (<http://localhost:7471>)
+
+```{}
 ```

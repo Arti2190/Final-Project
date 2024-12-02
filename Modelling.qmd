@@ -2,6 +2,8 @@
 title: "EDA"
 format: html
 editor: visual
+execute: 
+  cache: true
 editor_options: 
   chunk_output_type: console
 ---
@@ -39,7 +41,37 @@ library(rpart.plot)
 ```
 
 ```{r}
+health_data <- read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
+head(health_data)
 
+```
+
+```{r}
+health_data <- health_data |>
+  mutate(HighBP = factor(HighBP, levels = c(0,1), labels = c("No", "Yes")),
+         HighChol = factor(HighChol, levels = c(0,1), labels = c("No", "Yes")),
+         CholCheck = factor(CholCheck, levels = c(0,1), labels = c("No", "Yes")),
+         Smoker = factor(Smoker, levels = c(0,1), labels = c("No", "Yes")),
+         Stroke = factor(Stroke, levels = c(0,1), labels = c("No", "Yes")),
+         HeartDiseaseorAttack = factor(HeartDiseaseorAttack, levels = c(0,1), labels = c("No","Yes")),
+         PhysActivity = factor(PhysActivity, levels = c(0,1), labels = c("No", "Yes")),
+         Fruits = factor(Fruits, levels = c(0,1), labels = c("No", "Yes")),
+         Veggies = factor(Veggies, levels = c(0,1), labels = c("No", "Yes")),
+         HvyAlcoholConsump = factor(HvyAlcoholConsump, levels = c(0, 1), labels = c("No", "Yes")),
+         AnyHealthcare = factor(AnyHealthcare, levels = c(0,1), labels = c("No", "Yes")),
+         NoDocbcCost = factor(NoDocbcCost, levels = c(0,1), labels = c("No", "Yes")),
+         GenHlth = factor(GenHlth, levels = c(1:5), labels = c("Excellent", "Very Good", "Good", "Fair", "Poor")),
+         DiffWalk = factor(DiffWalk, levels = c(0,1), labels = c("No", "Yes")),
+         Sex = factor(Sex, levels = c(0,1), labels = c("Female", "Male")),
+         Age = factor(Age, levels = c(1:13), labels = c("18-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+")),
+         Education = factor(Education, levels = c(1:6), labels = c("KG or No School", "Elementary", "Middle school", "High school", "College","Professional Degree")),
+         Income = factor(Income, levels = c(1:8), labels = c("<10K", "$10k-$15k", "$15k-$20k", "$20k-$25k", "$25k-$35k", "$35k-$50k", "$50k-$75k", "$75k+"))
+         )
+
+health_data
+```
+
+```         
 ```
 
 -   Make a model for diabetes data. Split the data into 70(training) and 30(testing) percent.
@@ -66,18 +98,14 @@ diabetes_CV_folds <- vfold_cv(diabetes_train, 5)
 
 -   Model 1: BMI and Smoker
 
--   Model 2: BMI, Smoker, HighBP, HearthDiseaserorAttack, **PhysActivity, Sex**
+-   Model 2: BMI, Smoker, HighBP, HearthDiseaserorAttack, PhysActivity, Sex
 
 -   Model 3: All the predictors
 
 ```{r}
-LR1_receipe <- recipe(Diabetes_binary ~  BMI + Smoker,
-                      data = health_data) |>
-  step_normalize(BMI)
-
-
-   
-
+# LR1_receipe <- recipe(Diabetes_binary ~  BMI + Smoker,
+#                       data = health_data) |>
+#   step_normalize(BMI)
 ```
 
 ```{r}
@@ -87,8 +115,8 @@ LR2_recipe <- recipe(Diabetes_binary ~ BMI + Smoker + HighBP + HeartDiseaseorAtt
 ```
 
 ```{r}
-LR3_recipe <- recipe(Diabetes_binary ~ ., data = health_data) |>
-  step_normalize(all_numeric(), -Diabetes_binary)
+# LR3_recipe <- recipe(Diabetes_binary ~ ., data = health_data) |>
+#   step_normalize(all_numeric(), -Diabetes_binary)
 
 ```
 
@@ -100,10 +128,10 @@ LR2_recipe |>
 ```
 
 ```{r}
-LR3_recipe |>
-  prep(diabetes_train) |>
-  bake(diabetes_train) |>
-  colnames()
+# LR3_recipe |>
+#   prep(diabetes_train) |>
+#   bake(diabetes_train) |>
+#   colnames()
 ```
 
 ### Classification Tree
@@ -135,12 +163,13 @@ Fit the model with tune_grid() and grid_regular()
 tree_grid <- grid_regular(cost_complexity(),
                           tree_depth(),
                           levels = c(10,5))
+```
 
+```{r}
 tree_fits <- tree_wkf |>
   tune_grid(resamples = diabetes_CV_folds,
             grid = tree_grid,
             metrics = metric_set(accuracy, mn_log_loss)
-            #round(3)
   )
 
 tree_fits
@@ -160,6 +189,9 @@ final_tree <- finalize_workflow(tree_wkf, best_tree) |>
 ```
 
 Evaluate the model on the test set
+# TRy
+
+
 
 ```{r}
 tree_pred <- predict(final_tree, diabetes_test, type = "prob") |>
@@ -176,6 +208,10 @@ print(tree_log_loss)
 
 
 ```
+# Try
+
+
+
 
 ## Fitting Random Forest
 
@@ -207,15 +243,15 @@ rf_fit <- rf_wkf |>
 Collect and view metrics
 
 ```{r}
-rf_fit |>
-  collect_metrics() |>
-  filter(.metric == "mn_log_loss") |>
-  arrange(mean)
+# rf_fit |>
+#   collect_metrics() |>
+#   filter(.metric == "mn_log_loss") |>
+#   arrange(mean)
 
 #print(rf_metrics)
 ```
 
-Let's see which tuning parameteris the best
+Let's see which tuning parameters is best
 
 ```{r}
 rf_best_params <- select_best(rf_fit, metric = "mn_log_loss")
@@ -245,35 +281,97 @@ rf_final_metrics <- rf_final_fit |>
 rf_final_metrics
 ```
 
-### Collect metrics for both models
+### 
 
 -   Decision Tree Test set performance
 
 ```{r}
 # Get predicted probabilities
 tree_final_predictions <- final_tree |>
-  predict(diabetes_test, type = "prob") |>
-  bind_cols(diabetes_test |> select(Diabetes_binary))
+   predict(diabetes_test, type = "prob") |>
+   bind_cols(diabetes_test |> select(Diabetes_binary))
 
 # Convert predicted probabilities to class labels (threshold at 0.5)
-tree_final_predictions <- tree_final_predictions |>
-  mutate(.pred_class = ifelse(.pred_1 > 0.5, "1", "0"))
+ tree_final_predictions <- tree_final_predictions |>
+   mutate(.pred_class = ifelse(.pred_1 > 0.5, "1", "0"))
 
 # Convert the class labels into factors for accuracy calculation
-tree_final_predictions <- tree_final_predictions |>
-  mutate(.pred_class = factor(.pred_class, levels = c("0", "1")))
+ tree_final_predictions <- tree_final_predictions |>
+   mutate(.pred_class = factor(.pred_class, levels = c("0", "1")))
 
 # Now calculate metrics
-tree_final_metrics <- yardstick::metrics(
-  tree_final_predictions,
-  truth = Diabetes_binary,
-  estimate = .pred_class
+ tree_final_metrics <- yardstick::metrics(
+   tree_final_predictions,   truth = Diabetes_binary,
+   estimate = .pred_class
+
 )
 
 # View metrics
 tree_final_metrics
+```
+
+```{r}
+# # Evaluation of Decision Tree
+# tree_pred <- predict(final_tree, diabetes_test, type = "prob") |>
+#   bind_cols(diabetes_test %>% select(Diabetes_binary))
+# 
+#tree_log_loss <- mn_log_loss(tree_pred, truth = Diabetes_binary, .pred_1)
+# 
+# # Evaluation of Random Forest
+# rf_pred <- predict(rf_final_fit, diabetes_test, type = "prob") |>
+#   bind_cols(diabetes_test %>% select(Diabetes_binary))
+# 
+# # Log loss for Random Forest
+# rf_log_loss <- mn_log_loss(rf_pred, truth = Diabetes_binary, .pred_1)
+# 
 
 ```
+
+
+```{r}
+
+# Calculate Log-Loss for Decision Tree
+tree_log_loss <- mn_log_loss(tree_pred, truth = Diabetes_binary, .pred_1)
+
+# Extract the finalized workflow from last_fit() 
+rf_workflow_extracted <- extract_workflow(rf_final_fit)
+
+# Predict probabilities on the test set
+rf_pred <- predict(rf_workflow_extracted, diabetes_test, type = "prob") |>
+  bind_cols(diabetes_test %>% select(Diabetes_binary))
+
+# Calculate Log-Loss for the Random Forest Model
+rf_log_loss <- mn_log_loss(rf_pred, truth = Diabetes_binary, .pred_1)
+
+# Convert predicted probabilities to class labels for accuracy evaluation
+rf_pred <- rf_pred |>
+  mutate(.pred_class = ifelse(.pred_1 > 0.5, "1", "0")) |>
+  mutate(.pred_class = factor(.pred_class, levels = c("0", "1")))
+
+# Evaluate metrics (accuracy, etc.)
+rf_metrics <- rf_pred |>
+  yardstick::metrics(truth = Diabetes_binary, estimate = .pred_class)
+
+# Print metrics
+print(rf_metrics)
+
+
+```
+
+```{r} 
+# Compare models}
+# model_comparison <- tibble(
+#   Model = c("Decision Tree", "Random Forest"),
+#   Log_Loss = c(tree_log_loss, rf_log_loss)
+# )
+# 
+# print(model_comparison)
+
+print(tree_log_loss)
+print(rf_log_loss)
+```
+
+
 
 -   Random Forest Test Set performance
 
@@ -300,40 +398,46 @@ print(model_comparison)
 
 ```
 
-### Declare the winner
-
 ```{r}
-if(model_comparison$Accuracy[1] >model_comparison$Accuracy[2]) {
+# Declare winner based on log-loss
+# Calculate log-loss
+tree_log_loss <- mn_log_loss(tree_pred, truth = Diabetes_binary, .pred_1) %>% pull(.estimate)
+rf_log_loss <- mn_log_loss(rf_pred, truth = Diabetes_binary, .pred_1) %>% pull(.estimate)
+print(tree_log_loss)
+print(rf_log_loss)
+# Declare winner
+if (tree_log_loss < rf_log_loss) {
   winner <- "Decision Tree"
 } else {
-    winner <- "Random Forest"
+  winner <- "Random Forest"
 }
 
-cat("The best performance model is :", winner)
+# Print the winner
+cat("The best model is:", winner)
+
 ```
 
 Plot the variable importance
 
 ```{r}
-library(vip)
+# bag_final_model <- extract_fit_engine(rf_final_fit)
+# bag_final_model$imp |>
+#   mutate(term = factor(term, levels = term)) |> 
+#   ggplot(aes(x = term, y = value)) + geom_bar(stat ="identity") +
+#   coord_flip()
 ```
 
-```{r}
-# Extract the final random forest model
-# rf_final_model <- rf_final_fit.workflow[[1]] |>
-#   extract_fit_parsnip()
-```
+### Save the file for api
 
 ```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
+# # save the training data set
+# saveRDS(diabetes_train, file = "data/diabetes_train.rds")
+# 
+# # save the random forest tree model
+# saveRDS(rf_final_fit, file = "data/final_rf_model.rds")
+# 
+# #save the comparison metrics
+# saveRDS(model_comparison, file = "data/model_comparison.rds")
 ```
 
 ```{r}
