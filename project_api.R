@@ -153,8 +153,8 @@ confusion_endpoint <- function() {
   
   #print(cm_plot)
   # Save the plot to a static file
-  output_file <- "www/confusion_matrix.png"  
-  ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
+  #output_file <- "/confusion_matrix.png"  
+  #ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
   
   # Return the file URL
   #list(url = paste0("http://localhost:8000/", output_file))

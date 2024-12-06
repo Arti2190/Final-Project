@@ -151,8 +151,8 @@ confusion_endpoint <- function() {
   
 
   # Save the plot to a static file
-  output_file <- "www/confusion_matrix.png"  # Ensure the `www` folder exists in your project
-  ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
+  #output_file <- "/confusion_matrix.png"  # Ensure the `www` folder exists in your project
+  #ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
   
   # Return the file URL
   #list(url = paste0("http://localhost:8000/", output_file))
@@ -163,14 +163,14 @@ confusion_endpoint <- function() {
 
 
 # Explicitly create and run the Plumber object
-    #pr <- Plumber$new()
+#pr <- Plumber$new()
 #pr$print()
-    #pr$handle("GET", "/pred", pred_endpoint)
-    #pr$handle("GET", "/info", info_endpoint)
-    #pr$handle("GET", "/confusion", confusion_endpoint)
+#pr$handle("GET", "/pred", pred_endpoint)
+#pr$handle("GET", "/info", info_endpoint)
+#pr$handle("GET", "/confusion", confusion_endpoint)
 
 # Run the API server
-    #pr$run(port = 8000, swagger = TRUE)
+#pr$run(port = 8000, swagger = TRUE)
 
 #For cleaning the cache
 #pr$removeHandle("GET", "/pred")
