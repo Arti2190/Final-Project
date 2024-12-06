@@ -1,7 +1,6 @@
 FROM rstudio/plumber
 
 WORKDIR /
-RUN mkdir /www
 
 # Install system dependencies
 RUN apt-get update -qq && apt-get install -y \
