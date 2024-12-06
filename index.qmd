@@ -1,0 +1,25 @@
+---
+title: "index"
+format: html
+editor: visual
+---
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+
+
+```
+
+# Health Care Project
+
+\[click here for the EDA Page\] - [EDA_p.html](EDA_p.html)
+
+\[click here for the Modelling Page\] - [Modelling.html](Modelling.html)

@@ -246,7 +246,7 @@ health_data |>
 
 ## Link to navigate to the Modeling.qmd
 
-\[click here for the Modelling Page\] ([docs/Modelling](docs/Modelling.html){.uri}[.html](Modeling.html){.uri})
+\[click here for the Modelling Page\] - [Modelling.html](Modelling.html)
 
 ```         
 ```
