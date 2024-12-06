@@ -1,4 +1,6 @@
 # myAPI.R
+# Import all the libraries
+
 library(plumber)
 library(tidymodels)
 library(dplyr)
@@ -35,37 +37,37 @@ health_data <- health_data |>
     Income = factor(Income, levels = c(1:8), labels = c("<10K", "$10k-$15k", "$15k-$20k", "$20k-$25k", "$25k-$35k", "$35k-$50k", "$50k-$75k", "$75k+"))
   )
 
-# Convert BMI to numeric and handle NAs
+# Convert BMI to numeric 
 health_data$BMI <- as.numeric(health_data$BMI)
 sum(is.na(health_data$BMI))
 
-# Define the recipe with normalization for BMI
+# Define the recipe 
 LR2_recipe <- recipe(Diabetes_binary ~ BMI + Smoker + HighBP + HeartDiseaseorAttack + PhysActivity + Sex, 
-                     data = health_data) %>%
+                     data = health_data) |>
   step_normalize(BMI)
 
 # Define the random forest model specification
-rf_spec <- rand_forest(trees = 1000) %>%
-  set_engine("ranger") %>%
+rf_spec <- rand_forest(trees = 1000) |>
+  set_engine("ranger") |>
   set_mode("classification")
 
-# Define and fit the workflow
-rf_wkf <- workflow() %>%
-  add_recipe(LR2_recipe) %>%
+# fit the workflow
+rf_wkf <- workflow() |>
+  add_recipe(LR2_recipe) |>
   add_model(rf_spec)
 
 # Fit the model to the entire data
 final_rf_model <- fit(rf_wkf, data = health_data)
 
-# Helper function to find the most prevalent class
+# Define the Helper function to find the most prevalent class
 get_most_prevalent_class <- function(column) {
   if(all(is.na(column))) {
     return("None")
   }
-  column %>%
-    na.omit() %>%
-    table() %>%
-    which.max() %>%
+  column |>
+    na.omit() |>
+    table() |>
+    which.max() |>
     names()
 }
 
@@ -107,7 +109,7 @@ pred_endpoint <- function(HighBP = default_values$HighBP,
   )
   
   # Make prediction with the fitted model
-  prediction <- predict(final_rf_model, input_data) %>%
+  prediction <- predict(final_rf_model, input_data) |>
     pull(.pred_class)
   
   return(list(prediction = prediction))
@@ -127,9 +129,9 @@ info_endpoint <- function() {
 
 
 
-# Generate predictions for the entire dataset
-predictions <- predict(final_rf_model, health_data) %>%
-  bind_cols(health_data %>% select(Diabetes_binary)) %>%
+# Generate the predictions for the entire dataset
+predictions <- predict(final_rf_model, health_data) |>
+  bind_cols(health_data |> select(Diabetes_binary)) |>
   mutate(
     .pred_class = factor(.pred_class, levels = c("No", "Yes")),  
     Diabetes_binary = factor(Diabetes_binary, levels = c("No", "Yes"))  
@@ -141,17 +143,17 @@ str(predictions)
 #* @get /confusion
 #* @serializer png
 confusion_endpoint <- function() {
-  # Generate confusion matrix using the predictions data frame
-  cm <- predictions %>%
+  # create confusion matrix 
+  cm <- predictions |>
     conf_mat(Diabetes_binary, .pred_class)  
   
   # Create a confusion matrix plot (heatmap)
   cm_plot <- autoplot(cm, type = "heatmap") +
     ggtitle("Confusion Matrix Heatmap")
   
-
+  #print(cm_plot)
   # Save the plot to a static file
-  output_file <- "www/confusion_matrix.png"  # Ensure the `www` folder exists in your project
+  output_file <- "www/confusion_matrix.png"  
   ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
   
   # Return the file URL
@@ -163,14 +165,14 @@ confusion_endpoint <- function() {
 
 
 # Explicitly create and run the Plumber object
-pr <- Plumber$new()
+  #pr <- Plumber$new()
 #pr$print()
-pr$handle("GET", "/pred", pred_endpoint)
-pr$handle("GET", "/info", info_endpoint)
-pr$handle("GET", "/confusion", confusion_endpoint)
+  #pr$handle("GET", "/pred", pred_endpoint)
+  #pr$handle("GET", "/info", info_endpoint)
+  #pr$handle("GET", "/confusion", confusion_endpoint)
 
 # Run the API server
-pr$run(port = 8000, swagger = TRUE)
+  #pr$run(port = 8000, swagger = TRUE)
 
 #For cleaning the cache
 #pr$removeHandle("GET", "/pred")
