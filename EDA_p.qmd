@@ -246,9 +246,7 @@ health_data |>
 
 ## Link to navigate to the Modeling.qmd
 
-\[click here for the Modeling Page\] (<http://localhost:7471>)
-
-<http://localhost:5248>
+\[click here for the Modelling Page\] ([docs/Modelling](docs/Modelling.html){.uri}[.html](Modeling.html){.uri})
 
 ```         
 ```
