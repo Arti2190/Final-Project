@@ -141,7 +141,6 @@ str(predictions)
 
 #* Confusion matrix endpoint
 #* @get /confusion
-#* @serializer png
 confusion_endpoint <- function() {
   # create confusion matrix 
   cm <- predictions |>
@@ -156,23 +155,20 @@ confusion_endpoint <- function() {
   #output_file <- "/confusion_matrix.png"  
   #ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
   
-  # Return the file URL
-  #list(url = paste0("http://localhost:8000/", output_file))
-  # Return the confusion matrix as JSON
+
   as.list(cm$table)
 }
 
 
-
 # Explicitly create and run the Plumber object
-  #pr <- Plumber$new()
+#pr <- Plumber$new()
 #pr$print()
-  #pr$handle("GET", "/pred", pred_endpoint)
-  #pr$handle("GET", "/info", info_endpoint)
-  #pr$handle("GET", "/confusion", confusion_endpoint)
+#pr$handle("GET", "/pred", pred_endpoint)
+#pr$handle("GET", "/info", info_endpoint)
+#pr$handle("GET", "/confusion", confusion_endpoint)
 
 # Run the API server
-  #pr$run(port = 8000, swagger = TRUE)
+#pr$run(port = 8000, swagger = TRUE)
 
 #For cleaning the cache
 #pr$removeHandle("GET", "/pred")

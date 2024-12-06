@@ -139,7 +139,6 @@ str(predictions)
 
 #* Confusion matrix endpoint
 #* @get /confusion
-#* @serializer png
 confusion_endpoint <- function() {
   # Generate confusion matrix using the predictions data frame
   cm <- predictions %>%
@@ -149,17 +148,14 @@ confusion_endpoint <- function() {
   cm_plot <- autoplot(cm, type = "heatmap") +
     ggtitle("Confusion Matrix Heatmap")
   
-
+  #print(cm_plot)
   # Save the plot to a static file
-  #output_file <- "/confusion_matrix.png"  # Ensure the `www` folder exists in your project
+  #output_file <- "/confusion_matrix.png"  
   #ggsave(output_file, plot = cm_plot, device = "png", width = 7, height = 5, units = "in")
   
-  # Return the file URL
-  #list(url = paste0("http://localhost:8000/", output_file))
-  # Return the confusion matrix as JSON
+
   as.list(cm$table)
 }
-
 
 
 # Explicitly create and run the Plumber object
@@ -175,3 +171,5 @@ confusion_endpoint <- function() {
 #For cleaning the cache
 #pr$removeHandle("GET", "/pred")
 #plumb(file='new_api.R')$run()
+
+
